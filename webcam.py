@@ -6,6 +6,7 @@ import smtplib
 from email.message import EmailMessage
 from dotenv import load_dotenv
 import os
+import json
 
 # Cargar variables del archivo .env
 load_dotenv()
@@ -17,6 +18,31 @@ EMAIL_TO = os.getenv("EMAIL_TO")
 EMAIL_BCC = os.getenv("EMAIL_BCC") 
 SMTP_SERVER = os.getenv("SMTP_SERVER")
 SMTP_PORT = os.getenv("SMTP_PORT")
+
+def registrar_envio(nombre_foto):
+    """Registra el envío de un correo con el nombre de la foto y la fecha en un archivo JSON."""
+    registro = {
+        "fecha_hora": time.strftime("%Y-%m-%d %H:%M:%S"),  # Formato: Año-Mes-Día Hora:Minuto:Segundo
+        "nombre_foto": nombre_foto
+    }
+
+    try:
+        # Leer el archivo JSON existente, si existe
+        try:
+            with open("registros_envios.json", "r") as file:
+                datos = json.load(file)
+        except FileNotFoundError:
+            datos = []
+
+        # Agregar el nuevo registro
+        datos.append(registro)
+
+        # Guardar el archivo actualizado
+        with open("registros_envios.json", "w") as file:
+            json.dump(datos, file, indent=4)
+        print(f"Registro guardado: {registro}")
+    except Exception as e:
+        print(f"Error al guardar el registro: {e}")
 
 def reproducir_alarma():
     """Reproduce el sonido de la alarma durante 4 segundos."""
@@ -45,6 +71,8 @@ def enviar_correo(nombre_foto):
             server.send_message(msg)
 
         print(f"Correo enviado a {EMAIL_TO} con la foto {nombre_foto}")
+        # Registrar el envío en un archivo JSON
+        registrar_envio(nombre_foto)
     except Exception as e:
         print(f"Error al enviar el correo: {e}")
 
